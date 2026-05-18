@@ -12,18 +12,30 @@ let resultMessage = "";
 let gestureCooldown = 0; // 防止手勢偵測過於靈敏
 
 function preload() {
-  // 載入 ml5.js 的 handPose 模型
-  handPose = ml5.handPose();
+  // 檢查 ml5 是否正確載入
+  if (typeof ml5 !== 'undefined') {
+    handPose = ml5.handPose();
+  } else {
+    console.error("ml5 函式庫未載入，請檢查 HTML 檔案是否包含 ml5.js 的 script 標籤。");
+  }
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  capture = createCapture(VIDEO);
+  // 加入錯誤回呼，捕捉鏡頭存取失敗的情況
+  capture = createCapture(VIDEO, function(stream) {
+    console.log("鏡頭啟動成功");
+  }, function(err) {
+    console.error("鏡頭啟動失敗：", err);
+    resultMessage = "找不到攝影機，請檢查權限設定";
+  });
   capture.size(640, 480); // 設定基準解析度以利座標計算
   capture.hide(); // 隱藏預設產生的 HTML 影片標籤，改繪製在畫布上
 
-  // 開始偵測影像中的手部節點
-  handPose.detectStart(capture, gotHands);
+  // 確保 handPose 已初始化才開始偵測
+  if (handPose) {
+    handPose.detectStart(capture, gotHands);
+  }
 }
 
 function gotHands(results) {
@@ -37,7 +49,9 @@ function draw() {
   // 在畫布中央繪製影像，寬高設定為全螢幕畫面的 50%
   push();
   imageMode(CENTER);
-  image(capture, width / 2, height / 2, width * 0.5, height * 0.5);
+  if (capture) {
+    image(capture, width / 2, height / 2, width * 0.5, height * 0.5);
+  }
   pop();
 
   // 處理遊戲邏輯
