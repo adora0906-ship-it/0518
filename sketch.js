@@ -3,6 +3,15 @@ let pg; // 用於處理像素的圖層
 let handPose;
 let hands = [];
 
+// 遊戲變數
+let gameState = 'WAITING'; // WAITING, PLAYING, RESULT, FINISHED
+let timer = 3;
+let lastTimestamp = 0;
+let playerChoice = "";
+let computerChoice = "";
+let resultMessage = "";
+let canDetectAction = false;
+
 function preload() {
   // 載入 ml5.js 的 handPose 模型
   handPose = ml5.handPose();
@@ -89,12 +98,8 @@ function draw() {
         let g = pg.pixels[i + 1];
         let b = pg.pixels[i + 2];
         let avg = Math.floor((r + g + b) / 3);
-
-        // 因為影像被 scale(-1, 1) 了，文字座標也需要對應翻轉，否則文字會反過來
-        // 將 pg 座標映射到主畫布的顯示區域內
         let screenX = map(x, 0, pg.width, startX + w, startX); 
         let screenY = map(y, 0, pg.height, startY, startY + h);
-
         text(avg, screenX, screenY);
       }
     }
